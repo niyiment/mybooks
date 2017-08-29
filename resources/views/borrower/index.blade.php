@@ -11,6 +11,12 @@
 <div class="box-header with-border">
     <h4 class="title">
     <div class="pull-right">
+        <a href="{{ route('borrowers.pdfview',['download'=>'pdf']) }}" class="btn btn-success btn-sm btn-simple">
+            <i class="fa fa-pdf"></i>Export to PDF
+        </a>
+        <a href="{{ route('borrowers.excel') }}" class="btn btn-success btn-sm btn-simple">
+            <i class="fa fa-excel"></i>Export to Excel
+        </a>
         <a href="{{route('borrowers.create')}}" class="btn btn-primary btn-sm btn-simple">
             <i class="fa fa-plus"></i>Add Borrower
         </a>

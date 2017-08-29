@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Input;
 use DB;
 use Excel;
+use PDF;
 use App\User;
 use App\Models\Book;
 use App\Models\Customer;
@@ -109,6 +110,28 @@ class BorrowerController extends Controller
         ]);
     }
 
+    public function pdfview(Request $request)
+    {
+        $borrowers = Borrower::join('books', 'books.id', '=', 'borrowers.book_id')
+            ->join('customers','customers.id','=','borrowers.customer_id')
+            ->select(
+            //  \DB::raw("concat(users.first_name, ' ', users.last_name) as `name`"), 
+              'books.title', 
+              'customers.name',
+              'borrowers.status', 
+              'borrowers.issued_at')
+            ->get();
+
+        view()->share('borrowers',$borrowers);
+
+       // if($request->has('download')){
+            $pdf = PDF::loadView('borrower.pdfview');
+            return $pdf->download('borrowers-list.pdf');
+      //  }
+
+      //  return view('borrower.pdfview');
+    }
+
     public function exportToExcel(){
         //
         $borrowers = Borrower::select('id','book_id','customer_id','status','issued_at','return_at')->get();
@@ -169,6 +192,37 @@ class BorrowerController extends Controller
 
         })->download('xlsx');
 
+    }
+
+    public function exportPDF()
+    {
+        $borrowers = Borrower::join('books', 'books.id', '=', 'borrowers.book_id')
+            ->join('customers','customers.id','=','borrowers.customer_id')
+            ->select(
+            //  \DB::raw("concat(users.first_name, ' ', users.last_name) as `name`"), 
+              'books.title', 
+              'customers.name',
+              'borrowers.status', 
+              'borrowers.issued_at')
+            ->get();
+       // Initialize the array which will be passed into the Excel
+        // generator.
+        $borrowersArray = []; 
+
+        // Define the Excel spreadsheet headers
+        $borrowersArray[] = ['book', 'customer','status','Date'];
+
+        // Convert each member of the returned collection into an array,
+        // and append it to the borrowers array.
+        foreach ($borrowers as $borrower) {
+            $borrowersArray[] = $borrower->toArray();
+        }
+       return Excel::create('BorrowersList', function($excel) use ($borrowersArray) {
+        $excel->sheet('mySheet', function($sheet) use ($borrowersArray)
+        {
+            $sheet->fromArray($borrowersArray);
+        });
+       })->download("pdf");
     }
 
     /**
